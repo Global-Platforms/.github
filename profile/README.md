@@ -25,7 +25,7 @@ We build the **Internal Developer Platform (IDP)** that powers rapid service del
 <tr>
 <td width="33%" valign="top">
 
-#### 🔐 Identity & Access
+#### Identity & Access
 Centralized identity management, token exchange, and secure access gateways.
 
 - **OAuth2 / OIDC Automation**
@@ -35,7 +35,7 @@ Centralized identity management, token exchange, and secure access gateways.
 </td>
 <td width="33%" valign="top">
 
-#### ⚙️ Automation & Ops
+#### Automation & Ops
 Infrastructure-as-Code workflows, deployment orchestration, and compliance auditing.
 
 - **CI/CD Orchestration**
@@ -45,7 +45,7 @@ Infrastructure-as-Code workflows, deployment orchestration, and compliance audit
 </td>
 <td width="33%" valign="top">
 
-#### 🛠️ Dev Experience
+#### Dev Experience
 CLI tools, documentation portals, and standardized project templates.
 
 - **Developer CLI Tooling**
