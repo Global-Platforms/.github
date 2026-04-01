@@ -1,0 +1,171 @@
+name: GitHub Actions Node Runtime Guard
+run-name: >-
+  Node Runtime Guard • ${{ github.ref_name }} • ${{ github.event_name }}
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/**"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/**"
+  schedule:
+    - cron: "19 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: node-runtime-guard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-legacy-action-runtime:
+    name: Detect legacy Node.js action runtimes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Scan workflow action runtimes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_API_URL: ${{ github.api_url }}
+        run: |
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          import re
+          import sys
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          token = os.environ.get("GH_TOKEN", "")
+          api_base = os.environ.get("GITHUB_API_URL", "https://api.github.com")
+
+          headers = {
+              "Accept": "application/vnd.github+json",
+              "User-Agent": "node-runtime-guard",
+          }
+          if token:
+              headers["Authorization"] = f"Bearer {token}"
+
+          workflow_dir = Path('.github/workflows')
+          if not workflow_dir.exists():
+              print("No .github/workflows directory found. Skipping.")
+              sys.exit(0)
+
+          uses_pattern = re.compile(r"^[ \t-]*uses:[ \t]*([^ #]+)")
+
+          refs = []
+          for wf in sorted(workflow_dir.rglob('*')):
+              if wf.suffix not in {'.yml', '.yaml'} or not wf.is_file():
+                  continue
+              for idx, line in enumerate(wf.read_text(encoding='utf-8', errors='replace').splitlines(), 1):
+                  m = uses_pattern.match(line)
+                  if m:
+                      refs.append((str(wf), idx, m.group(1).strip()))
+
+          cache = {}
+
+          def gh_get_content(owner, repo, path, ref):
+              key = (owner, repo, path, ref)
+              if key in cache:
+                  return cache[key]
+
+              endpoint = f"{api_base}/repos/{owner}/{repo}/contents/{path}?ref={urllib.parse.quote(ref, safe='')}"
+              req = urllib.request.Request(endpoint, headers=headers)
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as resp:
+                      payload = json.loads(resp.read().decode('utf-8'))
+                      content_b64 = (payload.get('content') or '').replace('\\n', '')
+                      if not content_b64:
+                          cache[key] = None
+                          return None
+                      decoded = base64.b64decode(content_b64).decode('utf-8', errors='replace')
+                      cache[key] = decoded
+                      return decoded
+              except Exception:
+                  cache[key] = None
+                  return None
+
+          def local_action_using(path_ref):
+              path = Path(path_ref)
+              if path.name in {'action.yml', 'action.yaml'} and path.is_file():
+                  candidates = [path]
+              else:
+                  candidates = [path / 'action.yml', path / 'action.yaml']
+
+              for cand in candidates:
+                  if cand.is_file():
+                      text = cand.read_text(encoding='utf-8', errors='replace')
+                      m = re.search(r"^[ \t]*using:[ \t]*([A-Za-z0-9._-]+)", text, flags=re.MULTILINE)
+                      if m:
+                          return m.group(1).lower(), str(cand)
+              return None, None
+
+          findings = []
+          unresolved = []
+
+          for wf, line_no, ref in refs:
+              if ref.startswith('docker://'):
+                  continue
+
+              if ref.startswith('./'):
+                  using, path = local_action_using(ref)
+                  if using in {'node16', 'node20'}:
+                      findings.append((wf, line_no, ref, using, path))
+                  continue
+
+              if '@' not in ref:
+                  continue
+
+              target, version = ref.rsplit('@', 1)
+              if '/.github/workflows/' in target:
+                  continue
+
+              parts = target.split('/')
+              if len(parts) < 2:
+                  continue
+
+              owner, repo = parts[0], parts[1]
+              subpath = '/'.join(parts[2:])
+              candidates = [f"{subpath}/action.yml", f"{subpath}/action.yaml"] if subpath else ['action.yml', 'action.yaml']
+
+              content = None
+              used_path = None
+              for candidate in candidates:
+                  content = gh_get_content(owner, repo, candidate, version)
+                  if content is not None:
+                      used_path = candidate
+                      break
+
+              if content is None:
+                  unresolved.append((wf, line_no, ref))
+                  continue
+
+              m = re.search(r"^[ \t]*using:[ \t]*([A-Za-z0-9._-]+)", content, flags=re.MULTILINE)
+              using = m.group(1).lower() if m else ''
+              if using in {'node16', 'node20'}:
+                  findings.append((wf, line_no, ref, using, used_path))
+
+          if unresolved:
+              print("::warning::Unable to resolve action metadata for the following references:")
+              for wf, line_no, ref in unresolved:
+                  print(f"  - {wf}:{line_no} -> {ref}")
+
+          if findings:
+              print("Legacy GitHub Action runtimes detected (node16/node20):")
+              for wf, line_no, ref, using, meta_path in findings:
+                  print(f"  - {wf}:{line_no} -> {ref} (runs.using={using}, metadata={meta_path})")
+              sys.exit(1)
+
+          print("No legacy GitHub Action runtime detected.")
+          PY
