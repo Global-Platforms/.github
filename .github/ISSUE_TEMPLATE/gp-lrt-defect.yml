@@ -1,0 +1,150 @@
+name: GP LRT Defect
+description: Create a GP Jira LRT Defect from a GitHub issue.
+title: "[GP LRT Defect] "
+labels:
+  - needs-jira
+  - gp:type:defect
+  - gp:env:lrt
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form mirrors required Jira fields for GP / LRT Defect. GitHub issue title is used as Jira Summary. Jira Project and Issue Type are implied by this form.
+  - type: dropdown
+    id: components
+    attributes:
+      label: components - Component/s
+      description: Required Jira field. Select one or more GP components.
+      multiple: true
+      options:
+        - e2e1
+        - E2E2
+        - Kernel
+        - LRT
+        - NaaS Manager
+        - NEXO
+        - OGEX
+        - PROD
+        - User Profile
+    validations:
+      required: true
+  - type: input
+    id: customfield_25100
+    attributes:
+      label: customfield_25100 - Found in Release
+      description: Required Jira field. Enter the Jira release value exactly, for example Nexo 2.0, BM_R25-7, or Standalone.
+    validations:
+      required: true
+  - type: dropdown
+    id: customfield_16001
+    attributes:
+      label: customfield_16001 - Sub-Type
+      description: Required Jira field.
+      options:
+        - Application Defect
+        - Design Defect
+        - Requirement Defect
+        - Dev/CT
+        - ICT
+        - E2E
+        - BRT
+        - CRT
+        - LRT
+        - NFR
+        - Early Integration
+        - Launch Test
+        - Extended E2E
+        - E2ENFR
+        - Production
+        - E2E1
+        - E2E2
+        - E2E3
+        - Cloud-Dev/CT
+        - Cloud-E2E2
+        - Cloud-E2E1
+        - Cloud-Test
+    validations:
+      required: true
+  - type: dropdown
+    id: customfield_18700
+    attributes:
+      label: customfield_18700 - Severity
+      description: Required Jira field.
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        - "5"
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: priority - Priority
+      description: Required Jira field.
+      options:
+        - High
+        - Medium
+        - Low
+        - Trivial
+    validations:
+      required: true
+  - type: dropdown
+    id: customfield_10133
+    attributes:
+      label: customfield_10133 - Category
+      description: Required Jira field.
+      options:
+        - Software
+        - Config Issue
+        - Continuous Dataclean
+        - CR
+        - Defect
+        - Documentation
+        - Environment Problem
+        - Deployment Problem
+        - Interface Problem
+        - Interface incorrect
+        - Interface missing
+        - Network Element
+        - Performance
+        - Post-Launch Defect
+        - Requirement
+        - Salcus_Kanban_Tickets
+        - Usability
+        - 3rd-party
+        - Security Problem
+        - progression
+        - regression
+        - Datacleaning
+        - UI
+    validations:
+      required: true
+  - type: dropdown
+    id: customfield_25248
+    attributes:
+      label: customfield_25248 - Data Cleansing
+      description: Required Jira field.
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: dropdown
+    id: customfield_13905
+    attributes:
+      label: customfield_13905 - Security Impact
+      description: Required Jira field.
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: description - Description
+      description: Required Jira field. Include reproduction steps, expected behavior, actual behavior, and evidence.
+    validations:
+      required: true

@@ -1,0 +1,108 @@
+name: GP Support Request
+description: Create a GP Jira Support Request from a GitHub issue.
+title: "[GP Support Request] "
+labels:
+  - needs-jira
+  - gp:type:support-request
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form mirrors required Jira fields for GP / Support Request. GitHub issue title is used as Jira Summary. Jira Project and Issue Type are implied by this form.
+  - type: dropdown
+    id: components
+    attributes:
+      label: components - Component/s
+      description: Required Jira field. Select one or more GP components.
+      multiple: true
+      options:
+        - e2e1
+        - E2E2
+        - Kernel
+        - LRT
+        - NaaS Manager
+        - NEXO
+        - OGEX
+        - PROD
+        - User Profile
+    validations:
+      required: true
+  - type: dropdown
+    id: customfield_15500
+    attributes:
+      label: customfield_15500 - Request Type
+      description: Required Jira field.
+      options:
+        - Question
+        - Change Request
+        - CICD Tool Access
+        - License Request
+        - Tools Request
+        - Defect
+        - Incident
+        - 2nd Level Analysis
+        - Add Storage
+        - Backup/Restore
+        - Config Support
+        - Data Cleansing
+        - Env Maintenance
+        - External Access
+        - Firewall Change
+        - General Task
+        - Package Creation
+        - SW Installation
+        - Scripting
+        - Shadow Image
+        - Salcus_Kanban_Tickets
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: customfield_16001
+    attributes:
+      label: customfield_16001 - Sub-Type
+      description: Required Jira field.
+      options:
+        - Application Defect
+        - Design Defect
+        - Requirement Defect
+        - Dev/CT
+        - ICT
+        - E2E
+        - BRT
+        - CRT
+        - LRT
+        - NFR
+        - Early Integration
+        - Launch Test
+        - Extended E2E
+        - E2ENFR
+        - Production
+        - E2E1
+        - E2E2
+        - E2E3
+        - Cloud-Dev/CT
+        - Cloud-E2E2
+        - Cloud-E2E1
+        - Cloud-Test
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: priority - Priority
+      description: Required Jira field.
+      options:
+        - High
+        - Medium
+        - Low
+        - Trivial
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: description - Description
+      description: Required Jira field. This becomes the main request description in Jira.
+    validations:
+      required: true
