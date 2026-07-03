@@ -1,5 +1,1 @@
 blank_issues_enabled: false
-contact_links:
-  - name: Jira routing contract
-    url: https://github.com/Global-Platforms/kernel-qa/issues/new/choose
-    about: Use one of the GP issue forms so required Jira fields are captured before bridge polling.
